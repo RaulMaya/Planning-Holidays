@@ -19,7 +19,8 @@ app = Flask(__name__)
 @app.route("/")
 def home():
     print("Server received request for Home Page...")
-    return ("Welcome to my Home Page<br/>"
+    return ("Welcome to my Home Page!<br/>"
+    f"Links of my Page:<br/>"
     f"/api/v1.0/precipitation<br/>"
     f"/api/v1.0/stations<br/>"
     f"/api/v1.0/tobs<br/>"
@@ -84,6 +85,37 @@ def temperature():
     specific_tobs = list(np.ravel(results))
     return jsonify(specific_tobs)
 
+@app.route("/api/v1.0/<start>")
+def by_start_date(start):
+
+    session = Session(engine)
+    sel = [func.min(Measurement.tobs), func.max(Measurement.tobs), func.min(Measurement.tobs)]
+    results = session.query(*sel).filter(Measurement.date >= start).all()
+    session.close()
+
+    start_list = []
+    for data in results :
+        start_list.append({'Start':start, 'Minimum Temperature': data[0],'Maximum Temperature': data[1],'Average Temperature': data[2]})
+
+
+    start_date_data_retrival = list(np.ravel(start_list))
+    return jsonify(start_date_data_retrival)
+
+@app.route("/api/v1.0/<start>/<end>")
+def start_end_date(start,end):
+
+    session = Session(engine)
+    sel = [func.min(Measurement.tobs), func.max(Measurement.tobs), func.min(Measurement.tobs)]
+    results = session.query(*sel).filter(Measurement.date >= start).filter(Measurement.date <= end).all()
+    session.close()
+
+    start_list = []
+    for data in results :
+        start_list.append({'Start - End':start + ' until ' + end, 'Minimum Temperature': data[0],'Maximum Temperature': data[1],'Average Temperature': data[2]})
+
+
+    start_date_data_retrival = list(np.ravel(start_list))
+    return jsonify(start_date_data_retrival)
 
 if __name__ == "__main__":
     app.run(debug=True)
